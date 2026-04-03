@@ -1,153 +1,103 @@
-# 🛒 Online Shopping App — Android (Kotlin)
+**🛒 Online Shopping App**
 
-A production-quality Android grocery shopping app built with **Kotlin + Jetpack Compose**, following modern Android architecture best practices. Developed as a technical assessment submission.
+A modern Android e-commerce application built using Kotlin, MVVM, and Clean Architecture. This project demonstrates scalable app design with proper separation of concerns, dependency injection, and reactive data handling.
 
----
+**🚀 Features**
+ 🏠 Home screen with featured products & categories
+ 🔍 Product listing, search, and details
+ 🛒 Cart management (add, remove, update quantity)
+ 💳 Checkout flow with address validation
+ 📦 Order placement and confirmation
+ 👤 Basic login screen (UI flow)
+ 🔄 Pagination / load more products
+ 🧠 Clean architecture with UseCases
 
-## 📱 App Screenshots & Features
+** 🧱 Architecture**
 
-| Screen | Features |
-|---|---|
-| **Home** | Hero banner, category chips, deals carousel, top-rated products, Clubcard banner |
-| **Shop** | Search with suggestions, sort/filter, infinite scroll pagination, 33 real products |
-| **Product Detail** | Full product info, rating, add to cart with qty control, related products |
-| **Cart** | Item management, qty +/−, delivery threshold tracker, order summary |
-| **Checkout** | Address form, delivery slots, card/PayPal/Clubcard payment, order placement |
-| **Order Confirm** | Animated success, full order summary, estimated delivery |
-| **Login** | Email + password, guest login, form validation |
-| **Account** | Profile, order history, Clubcard points & redemption |
+This project follows Clean Architecture + MVVM:
 
----
+UI (Compose Screens)
+    ↓
+ViewModel
+    ↓
+UseCases (Domain Layer)
+    ↓
+Repository (Interface)
+    ↓
+Data Layer (Local + Remote)
 
-## 🏗️ Architecture & Tech Stack
+**📂 Project Structure**
+com.example.onlineshopping
 
-```
-MVVM + Clean Architecture
-├── UI Layer        → Jetpack Compose, Material3, StateFlow
-├── ViewModel Layer → Hilt-injected ViewModels, coroutines
-├── Repository      → Single source of truth, FakeApi + Room
-└── Data Layer      → Room (cart), FakeGroceryApi (products/orders)
-```
+├── data
+│   ├── local        # Room DB (CartDao, CartDb, CartEntity)
+│   ├── remote       # APIs (ProductApi, FakeGroceryApi)
+│   ├── repository   # Repository implementations
+│   ├── mapper       # Data ↔ Domain mapping
+│   └── model        # DTOs / API models
 
-| Component | Library |
-|---|---|
-| UI | Jetpack Compose + Material3 |
-| Architecture | MVVM + StateFlow |
-| Dependency Injection | Hilt |
-| Local DB (cart) | Room |
-| Navigation | Compose Navigation |
-| Images | Coil |
-| Async | Kotlin Coroutines |
-| Fake API | Pure Kotlin with simulated delays |
-| Build | Gradle Version Catalogs (libs.versions.toml) |
+├── domain
+│   ├── model        # Business models
+│   ├── repository   # Repository contracts
+│   └── usecase      # Business logic (AddToCart, PlaceOrder, etc.)
 
----
+├── ui
+│   ├── screen       # Compose UI screens
+│   ├── viewModel    # ViewModels
+│   ├── theme        # UI theming
+│   └── util         # UI utilities
 
-## 📁 Project Structure
+├── navigation       # Navigation graph & routes
+├── di               # Hilt dependency modules
+└── MainActivity.kt
 
-```
-app/src/main/java/com/example/onlineshopping
-├── OnlineShopping.kt                  # @HiltAndroidApp entry
-├── MainActivity.kt                    # NavHost + BottomNavigation
-├── Screen.kt                          # Sealed route definitions
-│
-├── api/
-│   └── FakeGroceryApi.kt              # 33 products, categories, fake order placement
-│
-├── data/
-│   ├── model/Models.kt                # Product, CartItem, Order, User, Address
-│   └── repository/
-│       ├── CartDao.kt                 # Room DAO + AppDatabase
-│       ├── CartRepository.kt          # Cart CRUD with Flow
-│       └── ProductRepository.kt       # Wraps FakeApi with runCatching
-│
-├── di/
-│   └── AppModule.kt                   # Hilt: Room + DAO providers
-│
-└── ui/
-    ├── home/
-    │   ├── HomeViewModel.kt
-    │   └── HomeScreen.kt
-    ├── shop/
-    │   ├── ShopViewModel.kt           # Search, filter, sort, pagination
-    │   ├── ShopScreen.kt              # Grid, search bar, ProductCard
-    │   ├── ProductDetailViewModel.kt
-    │   └── ProductDetailScreen.kt
-    ├── cart/
-    │   ├── CartViewModel.kt
-    │   └── CartScreen.kt
-    ├── checkout/
-    │   ├── CheckoutViewModel.kt
-    │   ├── CheckoutScreen.kt
-    │   └── OrderConfirmScreen.kt
-    ├── login/
-    │   ├── LoginViewModel.kt
-    │   └── LoginScreen.kt
-    └── account/
-        └── AccountScreen.kt
-```
+**🛠️ Tech Stack**
+. Kotlin
+. Jetpack Compose
+. MVVM Architecture
+. Clean Architecture (UseCases)
+. Hilt (Dependency Injection)
+. Coroutines & Flow
+. Room Database
+. Retrofit (API layer)
+. Navigation Component
 
----
+**🔄 Data Flow Example**
 
-## 🚀 Getting Started
+Placing an Order:
 
-### Prerequisites
-- Android Studio Hedgehog (2023.1.1) or newer
-- JDK 17+
-- Android SDK 34
-- Min SDK 26 (Android 8.0+)
+UI → CheckoutViewModel → PlaceOrderUseCase
+   → ProductRepository → API
+   → CartRepository → Clear Cart
 
-### Run the App
+**📦 Key UseCases**
+AddToCartUseCase
+GetCartUseCase
+PlaceOrderUseCase
+GetProductsUseCase
+ValidateAddressUseCase
 
-```bash
-git clone https://github.com/sakshi9/online-shopping-app.git
-cd onlineShopping
+**🧪 Highlights**
+✅ Modular & scalable architecture
+✅ Proper separation of concerns
+✅ No direct ViewModel injection (Hilt best practices)
+✅ Repository pattern with multiple data sources
+✅ Business logic handled via UseCases
 
-# Open in Android Studio
-# OR build from command line:
-./gradlew assembleDebug
-./gradlew installDebug
-```
+**▶️ Getting Started**
+1. Clone the repo: git clone https://github.com/sakshi9/online-shopping-app.git
+2. Open in Android Studio
+3. Run the app 🚀
+   
+**📌 Future Improvements**
+🔐 Authentication (Firebase/Auth API)
+💰 Payment integration
+🌐 Real backend integration
+❤️ Wishlist feature
+📊 Order history
 
-### No backend required
-The app uses a **fully self-contained fake API** (`FakeGroceryApi.kt`) that simulates:
-- ✅ Network latency (400–700ms random delay)
-- ✅ 33 real grocery products across 10 categories
-- ✅ Search, sort, pagination
-- ✅ Order placement with realistic response
-- ✅ User profile & Clubcard data
+**👩‍💻 Author**
+**Sakshi Gupta**
 
----
-
-## 🧪 Key Design Decisions
-
-### 1. Fake API over Mock Server
-Rather than setting up WireMock or a real backend, `FakeGroceryApi` is a `@Singleton` Hilt-injectable class that mimics async network behaviour using `delay()`. This makes the app fully self-contained and easy to demo offline.
-
-### 2. Room for Cart Persistence
-Cart data persists across app restarts using Room. `CartRepository` exposes `Flow<List<CartItem>>` which all ViewModels observe reactively.
-
-### 3. Unidirectional Data Flow
-All screens follow strict UDF: `UiState → Composable → Event → ViewModel`. No state leaks between layers.
-
-### 4. Compose Navigation with Type-Safe Args
-`Screen.kt` defines all routes as sealed classes with `createRoute()` helpers, preventing string typos at call sites.
-
----
-
-## 📋 Product Catalogue
-
-33 products across 10 categories:
-`Fruits` · `Vegetables` · `Dairy` · `Bakery` · `Meat & Fish` · `Drinks` · `Snacks` · `Frozen` · `Household`
-
-Products include: name, price, unit, high-res Unsplash image, rating, review count, badge (Organic, Sale, New, etc.), stock status, and description.
-
----
-
-## 👤 Demo Credentials
-
-- **Email:** any valid email (e.g. `test@gmail.com`)
-- **Password:** any 4+ character password
-- **Guest:** tap "Continue as Guest"
-
----
+**⭐ If you like this project**
+Give it a ⭐ on GitHub!
