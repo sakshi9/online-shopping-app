@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.onlineshopping.ui.model.LoginResult
 import com.example.onlineshopping.ui.viewModel.LoginViewModel
 
 @Composable
@@ -61,8 +62,10 @@ fun LoginScreen(
     val state by viewModel.state.collectAsState()
     var showPassword by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.isLoggedIn) {
-        if (state.isLoggedIn) onLoggedIn()
+    LaunchedEffect(state.loginState) {
+        if (state.loginState is LoginResult.Success) {
+            onLoggedIn()
+        }
     }
 
     Column(
@@ -128,7 +131,7 @@ fun LoginScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true, shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth(),
-                isError = state.error != null
+                isError = state.loginState is LoginResult.Error
             )
 
             // Password field
@@ -149,11 +152,12 @@ fun LoginScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true, shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth(),
-                isError = state.error != null
+                isError = state.loginState is LoginResult.Error
             )
 
+            val errorMessage = (state.loginState as? LoginResult.Error)?.message
             // Error
-            state.error?.let { err ->
+            errorMessage?.let { err ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -180,14 +184,14 @@ fun LoginScreen(
             // Sign in button
             Button(
                 onClick = viewModel::login,
-                enabled = !state.isLoading,
+                enabled = state.loginState !is LoginResult.Loading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
                 shape = RoundedCornerShape(99.dp)
             ) {
-                if (state.isLoading) {
+                if (state.loginState is LoginResult.Loading) {
                     CircularProgressIndicator(
                         color = Color.White,
                         modifier = Modifier.size(20.dp),
@@ -215,7 +219,7 @@ fun LoginScreen(
             // Guest button
             OutlinedButton(
                 onClick = viewModel::guestLogin,
-                enabled = !state.isLoading,
+                enabled = state.loginState !is LoginResult.Loading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),

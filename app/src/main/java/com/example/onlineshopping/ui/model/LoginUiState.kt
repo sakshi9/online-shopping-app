@@ -1,9 +1,14 @@
 package com.example.onlineshopping.ui.model
 
 data class LoginUiState(
-    val email: String    = "",
+    val email: String = "",
     val password: String = "",
-    val isLoading: Boolean = false,
-    val error: String?   = null,
-    val isLoggedIn: Boolean = false
+    val loginState: LoginResult = LoginResult.Idle
 )
+
+sealed class LoginResult {
+    object Idle : LoginResult()
+    object Loading : LoginResult()
+    object Success : LoginResult()
+    data class Error(val message: String) : LoginResult()
+}
