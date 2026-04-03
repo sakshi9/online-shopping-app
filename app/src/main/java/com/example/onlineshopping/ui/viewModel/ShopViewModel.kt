@@ -1,11 +1,9 @@
 package com.example.onlineshopping.ui.viewModel
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.onlineshopping.domain.usecase.GetProductsUseCase
 import com.example.onlineshopping.domain.usecase.GetSearchSuggestionsUseCase
-import com.example.onlineshopping.domain.usecase.LoadMoreProductsUseCase
 import com.example.onlineshopping.ui.model.ShopUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,7 +23,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ShopViewModel @Inject constructor(
     private val getProductsUseCase: GetProductsUseCase,
-    private val loadMoreProductsUseCase: LoadMoreProductsUseCase,
     private val getSuggestionsUseCase: GetSearchSuggestionsUseCase
 ) : ViewModel() {
 

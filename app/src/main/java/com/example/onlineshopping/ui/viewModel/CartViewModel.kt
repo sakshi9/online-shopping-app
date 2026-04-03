@@ -26,14 +26,12 @@ class CartViewModel @Inject constructor(
     private val removeCartItemUseCase: RemoveCartItemUseCase
 ) : ViewModel() {
 
-    val uiState: StateFlow<CartUiState> = getCartUseCase.invoke().map { items ->
-        val subtotal = items.sumOf { it.price * it.quantity }
-        val deliveryFee = if (subtotal >= 400.0) 0.0 else 40.0
+    val uiState: StateFlow<CartUiState> = getCartUseCase.invoke().map { summary ->
         CartUiState(
-            items = items,
-            subtotal = subtotal,
-            deliveryFee = deliveryFee,
-            total = subtotal + deliveryFee
+            items = summary.items,
+            subtotal = summary.subtotal,
+            deliveryFee = summary.deliveryFee,
+            total = summary.total
         )
     }.stateIn(
         viewModelScope,

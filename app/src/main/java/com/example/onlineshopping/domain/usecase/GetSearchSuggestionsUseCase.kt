@@ -10,5 +10,4 @@ class GetSearchSuggestionsUseCase @Inject constructor(
     suspend operator fun invoke(query: String): Result<List<Product>> {
         return productRepository.searchSuggestions(query)
     }
-
 }

@@ -11,8 +11,11 @@ import com.example.onlineshopping.domain.usecase.IncrementCartItemUseCase
 import com.example.onlineshopping.ui.model.ProductDetailsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,16 +33,21 @@ class ProductDetailViewModel @Inject constructor(
     private val productId: String = checkNotNull(savedStateHandle["productId"])
 
     private val _state = MutableStateFlow(ProductDetailsUiState())
-    val state: StateFlow<ProductDetailsUiState> = _state.asStateFlow()
+
+    val state: StateFlow<ProductDetailsUiState> =
+        combine(
+            _state,
+            getCartQtyUseCase(productId)
+        ) { base, qty ->
+            base.copy(cartQuantity = qty)
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            ProductDetailsUiState()
+        )
 
     init {
         loadProduct()
-
-        viewModelScope.launch {
-            getCartQtyUseCase(productId).collect { qty ->
-                _state.update { it.copy(cartQuantity = qty) }
-            }
-        }
     }
 
     private fun loadProduct() {
@@ -58,7 +66,10 @@ class ProductDetailViewModel @Inject constructor(
                 }
             }.onFailure { e ->
                 _state.update {
-                    it.copy(error = e.message, isLoading = false)
+                    it.copy(
+                        error = e.message,
+                        isLoading = false
+                    )
                 }
             }
         }
