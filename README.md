@@ -41,14 +41,13 @@ com.example.onlineshopping/
 ├── data/
 │   ├── local/
 │   │   ├── CartDao             # Room DAO for cart operations
-│   │   ├── CartDb              # Room database
+│   │   ├── AppDatabase              # Room database
 │   │   └── CartEntity          # Room entity
 │   ├── mapper/                 # Data ↔ Domain model mappers
 │   ├── model/
 │   │   ├── Category            # API response model
 │   │   ├── Order               # Order data model
 │   │   ├── Product             # Product data model
-│   │   ├── ProductsResponse    # Paginated product response
 │   │   └── User                # User profile model
 │   ├── remote/
 │   │   ├── CartApi             # Cart API interface
@@ -87,7 +86,6 @@ com.example.onlineshopping/
 │       ├── GetProductsUseCase
 │       ├── GetSearchSuggestionsUseCase
 │       ├── IncrementCartItemUseCase
-│       ├── LoadMoreProductsUseCase
 │       ├── PlaceOrderUseCase
 │       ├── RemoveCartItemUseCase
 │       └── ValidateAddressUseCase
@@ -204,7 +202,7 @@ The app uses `FakeGroceryApi` — a pure Kotlin class that simulates:
 
 | Module | Provides |
 |---|---|
-| `DatabaseModule` | `CartDb`, `CartDao` |
+| `DatabaseModule` | `AppDatabase`, `CartDao` |
 | `NetworkModule` | `FakeGroceryApi`, `ProductApi`, `CartApi` |
 | `RepositoryModule` | `CartRepository → CartRepositoryImpl`, `ProductRepository → ProductRepositoryImpl` |
 

@@ -1,21 +1,23 @@
 package com.example.onlineshopping.domain.repository
 
+import androidx.paging.PagingData
 import com.example.onlineshopping.data.model.Address
 import com.example.onlineshopping.data.model.Category
 import com.example.onlineshopping.data.model.Order
 import com.example.onlineshopping.data.model.Product
-import com.example.onlineshopping.data.model.ProductsResponse
 import com.example.onlineshopping.domain.model.CartData
 import com.example.onlineshopping.ui.model.DeliverySlot
+import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
 
-    suspend fun getCategories(): Result<List<Category>>
+    fun getProductsPaged(
+        category: String,
+        search: String,
+        sort: String
+    ): Flow<PagingData<Product>>
 
-    suspend fun getProducts(
-        category: String = "all", search: String = "",
-        sort: String = "default", page: Int = 1
-    ): Result<ProductsResponse>
+    suspend fun getCategories(): Result<List<Category>>
 
     suspend fun getProductById(id: String): Result<Product>
 
