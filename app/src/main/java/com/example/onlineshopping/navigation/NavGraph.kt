@@ -23,16 +23,14 @@ sealed class NavGraph(val route: String) {
 
     object Product : NavGraph("product") {
         const val ARG_ID = "productId"
-        val fullRoute = "$route/{$ARG_ID}"
+        val fullRoute = "$route/$ARG_ID}"
         fun createRoute(id: String) = "$route/$id"
     }
     object Cart : NavGraph("cart")
     object Checkout : NavGraph("checkout")
     object OrderDone : NavGraph("order") {
         const val ARG_ID = "orderId"
-
         val fullRoute = "$route/{$ARG_ID}"
-
         fun createRoute(id: String) = "$route/$id"
     }
     object Login     : NavGraph("login")

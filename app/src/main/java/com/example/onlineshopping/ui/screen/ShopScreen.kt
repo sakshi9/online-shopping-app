@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -41,11 +42,9 @@ fun ShopScreen(
     onProductClick: (String) -> Unit,
     viewModel: ShopViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.state.collectAsState()
-
-    // collectAsLazyPagingItems connects Paging3 to Compose.
-    // It automatically triggers loads and exposes LoadState for each position.
-    val pagingItems: LazyPagingItems<Product> = viewModel.products.collectAsLazyPagingItems()
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
+    val pagingItems = viewModel.products.collectAsLazyPagingItems()
 
     var showSortSheet by remember { mutableStateOf(false) }
 
@@ -59,11 +58,9 @@ fun ShopScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-
-        // ── Search bar ──────────────────────────────────────
         SearchBar(
             query       = uiState.searchQuery,
-            suggestions = uiState.suggestions,
+            suggestions = suggestions,
             onQueryChange = viewModel::onSearchQueryChange,
             onSearch = {
                 viewModel.submitSearch()
