@@ -1,6 +1,7 @@
-# 🛒 Online Shopping — Android App (Kotlin)
+# 🛒 Online Shopping App — Android (Kotlin)
 
-A production-ready grocery shopping Android app built with **Kotlin + Jetpack Compose**, following **Clean Architecture** with distinct data, domain, and UI layers.
+A production-ready e-commerce grocery shopping Android app built with 
+**Kotlin + Jetpack Compose**, following **Clean Architecture** with Use Cases, Repository pattern, Paging3 with Room as offline cache, and full ViewModel unit test coverage.
 
 ---
 
@@ -8,28 +9,28 @@ A production-ready grocery shopping Android app built with **Kotlin + Jetpack Co
 
 | Screen | Description |
 |---|---|
-| **HomeScreen** | Hero banner, category chips, deals & top-rated carousels |
-| **ShopScreen** | Product grid with search, sort, filter & infinite scroll |
-| **ProductDetailScreen** | Full product info, rating, add to cart, related products |
-| **CartScreen** | Item management, quantity controls, delivery threshold |
-| **CheckoutScreen** | Address form, delivery slot selection, payment method |
-| **OrderConfirmationScreen** | Animated success, full order summary, estimated delivery |
-| **LoginScreen** | Email/password with validation, guest login |
-| **AccountScreen** | Profile, order history, Clubcard points |
+| **Home** | Hero banner, category chips, deals carousel, top-rated products |
+| **Shop** | Paged product grid with search, sort, filter — backed by Room cache |
+| **Product Detail** | Full product info, rating, add to cart, related products |
+| **Cart** | Item management, quantity controls, free delivery threshold tracker |
+| **Checkout** | Address form, delivery slot selection, payment method |
+| **Order Confirmation** | Animated success screen with full order summary |
+| **Login** | Email/password validation, guest login |
+| **Account** | Profile, order history, loyalty points & redemption |
 
 ---
 
 ## 🏗️ Architecture
 
-Clean Architecture with 3 layers:
+Clean Architecture with 3 strict layers:
 
 ```
 UI Layer  →  Domain Layer  →  Data Layer
 ```
 
-- **UI** knows only about Domain (via UseCases)
-- **Domain** is pure Kotlin — no Android dependencies
-- **Data** implements Domain interfaces
+- **UI** only calls UseCases — never touches repositories directly
+- **Domain** is pure Kotlin — zero Android framework dependencies
+- **Data** implements domain interfaces and owns all I/O (network, Room)
 
 ---
 
@@ -40,37 +41,44 @@ com.example.onlineshopping/
 │
 ├── data/
 │   ├── local/
-│   │   ├── CartDao             # Room DAO for cart operations
-│   │   ├── AppDatabase              # Room database
-│   │   └── CartEntity          # Room entity
-│   ├── mapper/                 # Data ↔ Domain model mappers
+│   │   ├── AppDatabase             # Room database
+│   │   ├── CartDao                 # Room DAO — cart CRUD + Flow
+│   │   ├── CartEntity              # Room entity for cart items
+│   │   ├── ProductDao              # Room DAO — PagingSource for product cache
+│   │   ├── ProductEntity           # Room entity for cached products
+│   │   ├── RemoteKeysDao           # Room DAO — next/prev page bookmarks
+│   │   └── RemoteKeysEntity        # Room entity for Paging3 remote keys
+│   ├── mapper/                     # Data ↔ Domain model mappers
 │   ├── model/
-│   │   ├── Category            # API response model
-│   │   ├── Order               # Order data model
-│   │   ├── Product             # Product data model
-│   │   └── User                # User profile model
+│   │   ├── Category
+│   │   ├── Order
+│   │   ├── Product
+│   │   ├── ProductsResponse
+│   │   └── User
 │   ├── remote/
-│   │   ├── CartApi             # Cart API interface
-│   │   ├── CartDto             # Cart data transfer object
-│   │   ├── FakeGroceryApi      # Fake API (simulates network, 33 products)
-│   │   └── ProductApi          # Product API interface
+│   │   ├── CartApi
+│   │   ├── CartDto
+│   │   ├── FakeGroceryApi          # Simulated API with realistic delays
+│   │   └── ProductApi
 │   └── repository/
-│       ├── CartRepositoryImpl      # Cart repository implementation
-│       └── ProductRepositoryImpl   # Product repository implementation
+│       ├── CartRepositoryImpl
+│       ├── ProductRepositoryImpl   # Returns Flow<PagingData<Product>>
+│       └── ProductRemoteMediator   # Paging3 RemoteMediator (network → Room)
 │
 ├── di/
-│   ├── DatabaseModule          # Hilt: Room DB + DAO providers
-│   ├── NetworkModule           # Hilt: Retrofit / API providers
-│   └── RepositoryModule        # Hilt: Repository binding providers
+│   ├── DatabaseModule              # Room DB, CartDao, ProductDao, RemoteKeysDao
+│   ├── NetworkModule               # API providers
+│   └── RepositoryModule            # Interface → Impl bindings
 │
 ├── domain/
 │   ├── model/
-│   │   ├── CartData            # Domain model for cart state
-│   │   ├── HomeData            # Domain model for home screen
-│   │   └── ProductDetail       # Domain model for product detail
+│   │   ├── CartData
+│   │   ├── CartSummary
+│   │   ├── HomeData
+│   │   └── ProductDetail
 │   ├── repository/
-│   │   ├── CartRepository      # Cart repository interface
-│   │   └── ProductRepository   # Product repository interface
+│   │   ├── CartRepository          # Interface
+│   │   └── ProductRepository       # Interface
 │   └── usecase/
 │       ├── AddToCartUseCase
 │       ├── ClearCartUseCase
@@ -83,7 +91,7 @@ com.example.onlineshopping/
 │       ├── GetFeaturedProductsUseCase
 │       ├── GetHomeDataUseCase
 │       ├── GetProductDetailUseCase
-│       ├── GetProductsUseCase
+│       ├── GetProductsUseCase     
 │       ├── GetSearchSuggestionsUseCase
 │       ├── IncrementCartItemUseCase
 │       ├── PlaceOrderUseCase
@@ -91,12 +99,12 @@ com.example.onlineshopping/
 │       └── ValidateAddressUseCase
 │
 ├── navigation/
-│   ├── BottomNavItem           # Bottom nav configuration
-│   ├── NavGraph                # Navigation graph composable
-│   └── Navigation              # Route definitions (sealed class)
+│   ├── BottomNavItem
+│   ├── NavGraph
+│   └── Navigation
 │
 ├── ui/
-│   ├── model/                  # UI-specific state models
+│   ├── model/                      # UI-specific state models
 │   ├── screen/
 │   │   ├── AccountScreen
 │   │   ├── CartScreen
@@ -105,21 +113,29 @@ com.example.onlineshopping/
 │   │   ├── LoginScreen
 │   │   ├── OrderConfirmationScreen
 │   │   ├── ProductDetailScreen
-│   │   └── ShopScreen
-│   ├── theme/                  # Material3 colors, typography, shapes
-│   ├── util/                   # UI utilities / extensions
+│   │   └── ShopScreen              # Uses collectAsLazyPagingItems()
+│   ├── theme/
+│   ├── util/
 │   └── viewModel/
 │       ├── CartViewModel
 │       ├── CheckoutViewModel
 │       ├── HomeViewModel
 │       ├── LoginViewModel
-│       ├── OrderStore          # @Singleton in-memory order state holder
+│       ├── OrderStore              # @Singleton in-memory order bridge
 │       ├── OrderViewModel
 │       ├── ProductDetailViewModel
-│       └── ShopViewModel
+│       └── ShopViewModel           # Drives PagingData via flatMapLatest
 │
-├── MainActivity                # Single activity, hosts NavHost
-└── OnlineShoppingApplication   # @HiltAndroidApp entry point
+├── test/
+│   └── com.example.onlineshopping/
+│       ├── ShopViewModelTest
+│       ├── CartViewModelTest
+│       ├── HomeViewModelTest
+│       ├── CheckoutViewModelTest
+│       ├── ProductDetailViewModelTest
+│
+├── MainActivity
+└── OnlineShoppingApplication
 ```
 
 ---
@@ -131,38 +147,208 @@ com.example.onlineshopping/
 | Language | Kotlin |
 | UI | Jetpack Compose + Material3 |
 | Architecture | Clean Architecture + MVVM |
-| DI | Hilt |
+| Dependency Injection | Hilt |
 | Navigation | Compose Navigation |
-| Local DB (cart) | Room |
-| Async | Kotlin Coroutines + StateFlow |
+| Pagination | **Paging 3** |
+| Local Cache | **Room** (product cache + cart persistence) |
+| Async | Kotlin Coroutines + StateFlow + Flow |
 | Images | Coil |
-| Fake API | Pure Kotlin with simulated delays |
+| Unit Testing | JUnit4 + Mockito + Turbine + Coroutines Test |
 | Build System | Gradle Version Catalogs |
 
 ---
 
-## 🧩 Key Design Patterns
+## 📦 Paging 3 + Room Integration
 
-### Clean Architecture
-Each layer has a single responsibility:
-- **Data layer** handles API calls, database, and mapping
-- **Domain layer** contains pure business logic via UseCases — no Android imports
-- **UI layer** only calls UseCases, never touches repositories directly
-
-### Use Case per Action
-Every user action maps to exactly one UseCase (e.g. `AddToCartUseCase`, `PlaceOrderUseCase`). This keeps ViewModels thin and logic testable in isolation.
-
-### OrderStore (Cross-ViewModel Communication)
-`OrderStore` is a `@Singleton` plain class (not a ViewModel) used to pass the confirmed order from `CheckoutViewModel` (write) to `OrderViewModel` (read) after navigation, without violating Hilt's rule against injecting `@HiltViewModel` classes into other classes.
+### How it works
 
 ```
-CheckoutViewModel  →  orderStore.set(order)
-OrderViewModel     →  orderStore.order (StateFlow)
-OrderConfirmScreen →  reads via OrderViewModel, calls clearOrder() on exit
+ShopViewModel
+    │
+    │  flatMapLatest(category, search, sort)
+    ▼
+GetProductsUseCase
+    │
+    │  Flow<PagingData<Product>>
+    ▼
+ProductRepository.getProductsPaged()
+    │
+    │  Pager(remoteMediator, pagingSourceFactory)
+    ▼
+┌─────────────────────────────────────────────┐
+│           ProductRemoteMediator             │
+│                                             │
+│  REFRESH → fetch page 1 from API            │
+│          → clear stale Room cache           │
+│          → save products + RemoteKeys       │
+│                                             │
+│  APPEND  → read nextPage from RemoteKeys   │
+│          → fetch next page from API         │
+│          → append to Room cache             │
+│                                             │
+│  PREPEND → endOfPaginationReached = true   │
+└──────────────────┬──────────────────────────┘
+                   │ writes to
+                   ▼
+              Room Database
+         ┌────────────────────┐
+         │  products table    │  ← ProductDao.getProductsPaged()
+         │  remote_keys table │  ← RemoteKeysDao
+         └────────┬───────────┘
+                  │ PagingSource<Int, ProductEntity>
+                  ▼
+            ShopScreen
+     collectAsLazyPagingItems()
 ```
 
-### Repository Pattern
-`CartRepository` and `ProductRepository` are interfaces defined in the domain layer. `CartRepositoryImpl` and `ProductRepositoryImpl` in the data layer implement them. Hilt binds the implementations via `RepositoryModule`.
+### Key design decisions
+
+**Room as single source of truth** — the UI never reads directly from the network. It always reads from Room. The `RemoteMediator` fills Room when the cache runs low.
+
+**RemoteKeysEntity** — one row per filter combination (`category-search-sort`). Stores `nextPage` and `prevPage` so the mediator knows where to continue after the cached pages run out.
+
+**ProductEntity cache key** — `"$productId-$category-$search-$sort"` — the same product can exist in multiple filter result sets without overwriting other sets.
+
+**10-minute cache freshness** — `initialize()` checks `RemoteKeysEntity.lastUpdated`. If the cache is less than 10 minutes old, it returns `SKIP_INITIAL_REFRESH` and shows cached data instantly without hitting the network.
+
+**`flatMapLatest` in ShopViewModel** — when the user changes category, sort, or search, `flatMapLatest` cancels the previous `PagingData` flow and starts a new one. No manual page reset needed.
+
+```kotlin
+val products: Flow<PagingData<Product>> = _uiState
+    .map { Triple(it.selectedCategory, it.searchQuery, it.sortBy) }
+    .distinctUntilChanged()
+    .flatMapLatest { (category, search, sort) ->
+        getProductsUseCase(category, search, sort)
+    }
+    .cachedIn(viewModelScope)
+```
+
+---
+
+## 🧪 ViewModel Unit Tests
+
+Each ViewModel is tested in isolation using fakes — no real Room database or network calls.
+
+### Tools
+
+| Library | Purpose |
+|---|---|
+| `JUnit4` | Test runner |
+| `kotlinx-coroutines-test` | `runTest`, `TestDispatcher`, `advanceUntilIdle` |
+| `Turbine` | Flow assertion — `flow.test { awaitItem() }` |
+| `Mockito` / `MockK` | Mock UseCases and Repositories |
+| `androidx.paging:paging-testing` | `TestPager`, fake `PagingData` for Paging3 |
+
+### What is tested
+
+**ShopViewModelTest**
+- Initial state has correct defaults (`category = "all"`, `sort = "default"`)
+- `setCategory()` resets `searchQuery` and emits new `PagingData`
+- `setSort()` triggers new paging stream via `flatMapLatest`
+- `onSearchQueryChange()` debounces and calls `GetSearchSuggestionsUseCase`
+- `submitSearch()` clears suggestions
+- Filter change cancels previous paging flow (`distinctUntilChanged`)
+
+**CartViewModelTest**
+- Cart items collected from `CartRepository` flow correctly
+- Subtotal calculated correctly for multiple items
+- Delivery fee is `£0` when subtotal ≥ `£40`, `£3.99` otherwise
+- `increment()` / `decrement()` / `remove()` call correct repository methods
+- `clearCart()` empties the cart
+
+**HomeViewModelTest**
+- `HomeUiState` starts with `isLoading = true`
+- After load, `featured`, `deals`, `categories` are populated
+- Error from repository sets `error` in state
+
+**CheckoutViewModelTest**
+- Address validation rejects blank fields
+- `placeOrder()` calls `PlaceOrderUseCase` with correct parameters
+- On success, `OrderStore.set()` is called and `order` is set in state
+- On failure, `error` message is set in state
+- Delivery slot change updates `selectedSlot` in state
+
+**ProductDetailViewModelTest**
+- Loads product by ID from `SavedStateHandle`
+- Related products loaded in same call
+- `addToCart()` calls `AddToCartUseCase`
+- `increment()` / `decrement()` update cart quantity
+
+**LoginViewModelTest**
+- Empty email/password shows validation error
+- Invalid email format shows error
+- Password shorter than 4 characters shows error
+- Valid credentials set `isLoggedIn = true`
+- `guestLogin()` sets `isLoggedIn = true` without credentials
+
+### Example test
+
+```kotlin
+@Test
+fun `setCategory resets search query and triggers new paging stream`() = runTest {
+    val viewModel = ShopViewModel(fakeGetProductsUseCase, fakeSearchUseCase)
+
+    viewModel.setCategory("fruits")
+
+    viewModel.uiState.test {
+        val state = awaitItem()
+        assertEquals("fruits", state.selectedCategory)
+        assertEquals("", state.searchQuery)
+    }
+}
+
+@Test
+fun `cart subtotal is correct and delivery fee is free over 40`() = runTest {
+    val items = listOf(
+        CartItem("p1", "Apples", 25.00, "", "kg", 1),
+        CartItem("p2", "Milk",   20.00, "", "2L", 1)
+    )
+    fakeCartRepository.emit(items)
+
+    cartViewModel.uiState.test {
+        val state = awaitItem()
+        assertEquals(45.00, state.subtotal, 0.001)
+        assertEquals(0.0,   state.deliveryFee, 0.001)
+        assertEquals(45.00, state.total, 0.001)
+    }
+}
+```
+
+---
+
+## 🔌 Dependency Injection (Hilt)
+
+| Module | Provides |
+|---|---|
+| `DatabaseModule` | `AppDatabase`, `CartDao`, `ProductDao`, `RemoteKeysDao` |
+| `NetworkModule` | `FakeGroceryApi`, `ProductApi`, `CartApi` |
+| `RepositoryModule` | `CartRepository → CartRepositoryImpl`, `ProductRepository → ProductRepositoryImpl` |
+
+`OrderStore` uses `@Singleton` + `@Inject constructor()` — no module entry needed.
+
+---
+
+## 🔄 Full Data Flow
+
+```
+User Action (tap category / search / scroll)
+        ↓
+Composable (ShopScreen)
+        ↓  collectAsLazyPagingItems()
+ShopViewModel.products: Flow<PagingData<Product>>
+        ↓  flatMapLatest
+GetProductsUseCase
+        ↓
+ProductRepository.getProductsPaged()
+        ↓  Pager
+ProductRemoteMediator  ←→  FakeGroceryApi (network)
+        ↓  withTransaction
+Room Database (products + remote_keys tables)
+        ↓  PagingSource
+LazyVerticalGrid renders items
+LoadState.Append.Loading → spinner at bottom
+LoadState.Refresh.Error  → error + retry button
+```
 
 ---
 
@@ -174,37 +360,29 @@ OrderConfirmScreen →  reads via OrderViewModel, calls clearOrder() on exit
 - Android SDK 34
 - Min SDK 26 (Android 8.0+)
 
-### Run the App
+### Run the app
 
 ```bash
-git clone https://github.com/sakshi9/online-shopping-app.git
+git clone https://github.com/YOUR_USERNAME/OnlineShopping.git
 cd OnlineShopping
-```
-
-Open in Android Studio and click **Run**, or:
-
-```bash
 ./gradlew assembleDebug
 ./gradlew installDebug
 ```
 
-### No Backend Required
-The app uses `FakeGroceryApi` — a pure Kotlin class that simulates:
-- ✅ Realistic network latency (random 400–700ms delay)
-- ✅ 33 grocery products across 10 categories
-- ✅ Search, sort, pagination
-- ✅ Order placement with full response object
-- ✅ User profile & Clubcard data
+### Run unit tests
 
----
+```bash
+./gradlew test
+```
 
-## 🔌 Dependency Injection (Hilt)
+### No backend required
 
-| Module | Provides |
-|---|---|
-| `DatabaseModule` | `AppDatabase`, `CartDao` |
-| `NetworkModule` | `FakeGroceryApi`, `ProductApi`, `CartApi` |
-| `RepositoryModule` | `CartRepository → CartRepositoryImpl`, `ProductRepository → ProductRepositoryImpl` |
+`FakeGroceryApi` is a pure Kotlin class simulating realistic network behaviour:
+- ✅ Random latency (400–700ms per call)
+- ✅ 33 products across 10 categories
+- ✅ Filtering, sorting, pagination
+- ✅ Order placement with full response
+- ✅ User profile and loyalty points data
 
 ---
 
@@ -212,34 +390,12 @@ The app uses `FakeGroceryApi` — a pure Kotlin class that simulates:
 
 | Field | Value |
 |---|---|
-| Email | any valid email (e.g. `test@example.com`) |
+| Email | any valid email e.g. `user@example.com` |
 | Password | any 4+ characters |
-| Guest | tap "Continue as Guest" |
+| Guest | tap **Continue as Guest** |
 
 ---
 
-## 📦 Cart Persistence
+## 📄 License
 
-Cart items are persisted using **Room** via `CartEntity` + `CartDao`. The cart survives app restarts. `CartRepositoryImpl` exposes a `Flow<List<CartEntity>>` observed by `CartViewModel`.
-
----
-
-## 🔄 Data Flow
-
-```
-User Action
-    ↓
-Composable (Screen)
-    ↓
-ViewModel
-    ↓
-UseCase (Domain)
-    ↓
-Repository Interface (Domain)
-    ↓
-RepositoryImpl (Data)
-    ↓
-FakeGroceryApi / Room
-```
-
----
+This project is submitted as a technical assessment. All rights reserved.
